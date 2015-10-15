@@ -120,7 +120,7 @@
       	return new RegExp( regExp, self.options.regexpFlag || '' ).test( val );
       }
     },
-    input_selectors = ':input:not([type="submit"], button):enabled:visible'
+    input_selectors = ':input:not([type="submit"], button, select):enabled:visible';
 
 		// The actual plugin constructor
 		function Plugin ( element, options ) {
@@ -157,48 +157,42 @@
 				var $target = $(e.target);
 				var data = $target.data();
 				var value = $target.val();
-				this.removeMessageError($target);
-				// debugger;
-				for (var key in data) {
-					if (this._validators.hasOwnProperty(key) && !this._validators[key](value, data[key])) {
-						$target.addClass("hasError");
-						// debugger
-						if (this._options.showErrors) this.showMessageError($target, key, data[key]);
-						errorFlag = true;
-					} else {
-						$target.removeClass("hasError");
-					}
 
+				if ($target.is('[type="radio"]')) $target = this.$element.find('input[name="' + $target.attr('name') + '"]')
+				this.removeMessageError($target);
+				$target.removeClass("hasError");
+
+				for (var key in data) {
+					if(this._validators.hasOwnProperty(key) && !this._validators[key](value, data[key])){
+						$target.addClass("hasError");
+						this.showMessageError($target, key, data[key]);
+						break;
+					}
 				}
 				return errorFlag;
 			}
 			, onSubmit: function (e) {
 				
 				e.preventDefault();
-				console.log(this.validate());
-				if (this.validate()) {
-					console.log('do submit form');
-					
-				} else {
-					console.log('do not submit form');
-					return false;
-				}
+				this.validate();
 			}
 			, showMessageError: function (target, key, value) {
 				
 				var wrap = this._options.errors.classHandler(target);
-				// var errorsWrapper = $('ul.help-inline', wrap);
+				var message = ('object' === typeof this._messages[key]) ? this._messages[key][value] : this._messages[key];
 				var errorsWrapper = wrap.find($(this._options.errors.errorsWrapper));// $($(this._options.errors.errorsWrapper), wrap);
 				var errorElem = $(this._options.errors.errorElem).addClass(this._options.errorClass);
-				var message = this.formatMesssage(this._messages[key], value, this);
+				var message = this.formatMesssage(message, value, this);
 
 				target.removeClass(this._options.successClass);
-				if (target.data('error')) message = target.data('error');
+				if (!!target.attr('data-error-'+key)) {
+					var customError = target.attr('data-error-'+key);
+					message = this.formatMesssage(customError, value, this);
+				}
 				errorElem.text(message);
 				if (!errorsWrapper.length) {
 					wrap.append(this._options.errors.errorsWrapper);
 					errorsWrapper = $($(this._options.errors.errorsWrapper), wrap);
-					// errorsWrapper = $('ul.help-inline', wrap);
 				}
 				errorsWrapper.append(errorElem);
 				wrap.append(errorsWrapper);
@@ -206,6 +200,9 @@
 			}
 			, removeMessageError: function (target) {
 				var wrap = this._options.errors.classHandler(target);
+				wrap.find($(this._options.errors.errorsWrapper)).each(function () {
+					$(this).remove();
+				});
 				$('.error', wrap).remove();
 			}
 			, showSuccessField: function (target) {
@@ -266,6 +263,15 @@
 
 				return;
 			}
+		}
+		, isComplete: function () {
+			function fieldIncomplete() {
+	      return this.type === 'checkbox' ? !this.checked                                   :
+	             this.type === 'radio'    ? !$('[name="' + this.name + '"]:checked').length :
+	                                        $.trim(this.value) === ''
+	    }
+
+	    return !!this.$element.find(this._input_selectors).filter('[required]').filter(fieldIncomplete).length
 		}
 });
 
