@@ -1,5 +1,5 @@
 /*
- *  jquery-validator - v1.0
+ *  jquery-pkvalidate - v1.0
  *  Create custom jquery plugin validate
  *  Made by Nguyen Phuc Khanh
  *  Under MIT License
@@ -20,7 +20,7 @@
 		// minified (especially when both are regularly referenced in your plugin).
 
 		// Create the defaults once
-		var pluginName = "pkvalidate",
+		var pluginName = "pkvalidator",
 		dataKey = "plugin_" + pluginName,
 		defaults = {
 			inputs: 'input, textarea, select'           // Default supported inputs.
@@ -34,15 +34,14 @@
 	    , errorClass: 'pkvalidate-error'               // Class name on each invalid input
 	    , errorMessage: false                       // Customize an unique error message showed if one constraint fails
 	    , validators: {}                            // Add your custom validators functions
-	    , showErrors: true                          // Set to false if you don't want Parsley to display error messages
+	    , showErrors: true                          // Set to false if you don't want pkvalidate to display error messages
 	    , messages: {}
-	    , errors : {
-	    	classHandler : function (el) {
-					return $(el).closest('.form-group');
-				},
-				errorsWrapper: '<ul class=\"help-inline\"></ul>',
-				errorElem    : '<li></li>'
-	    }                              // Add your own error messages here
+	    , errors: {
+	        classHandler: function ( elem, isRadioOrCheckbox ) {}             // specify where pkvalidate error-success classes are set
+	      , container: function ( elem, isRadioOrCheckbox ) {}                // specify an elem where errors will be **apened**
+	      , errorsWrapper: '<div class="form-group has-error"></div>'                                        // do not set an id for this elem, it would have an auto-generated id
+	      , errorElem: '<p class="help-block has-error"></p>'                                            // each field constraint fail in an li
+      }                           // Add your own error messages here
 		},
 		messages = {
 			defaultMessage: "This value seems to be invalid.",
@@ -119,8 +118,7 @@
       , regexp: function ( val, regExp, self ) {
       	return new RegExp( regExp, self.options.regexpFlag || '' ).test( val );
       }
-    },
-    input_selectors = ':input:not([type="submit"], button, select):enabled:visible';
+    };
 
 		// The actual plugin constructor
 		function Plugin ( element, options ) {
@@ -133,7 +131,6 @@
 			this._options = defaults;
 			this._name = pluginName;
 			this._validators = validators;
-			this._input_selectors = input_selectors;
 			this._messages = messages;
 			this.init(options);
 		}
@@ -149,41 +146,73 @@
 			},
 			validate: function () {
 				// debugger
-				return this.$element.find(this._input_selectors).trigger('input.pkvalidator');
+				var arrInput = this._options.inputs.split(',');
+				// return false;
+				for (var input in arrInput) {
+					this.$element.find(arrInput[input].trim()).trigger('input.pkvalidator');
+				}
 			}
 			, validateFields: function (e) {
 				// var data = this.data();
+				var eType = e.type;
 				var errorFlag = false;
 				var $target = $(e.target);
 				var data = $target.data();
 				var value = $target.val();
+				// Do not show error with element unrequired
+				if (!$target.data('required') && !this._validators['required'](value)) {
+					this._options.errors.classHandler($target).removeClass('hasError');
+					this.removeMessageError($target);
+					return false
+				};
+				if ($target.is('[type="radio"]')) {
 
-				if ($target.is('[type="radio"]')) $target = this.$element.find('input[name="' + $target.attr('name') + '"]')
+					$target = this.$element.find('input[name="' + $target.attr('name') + '"]');
+					value = false;
+					data = $target.first().data();
+					$target.each(function() {
+						if ($(this).prop('checked')) value = true;
+					});
+				}
+				if ($target.is('[type="checkbox"]')) value = $target.prop('checked');
+
 				this.removeMessageError($target);
-				$target.removeClass("hasError");
+				this._options.errors.classHandler($target).removeClass("hasError");
 
 				for (var key in data) {
+					// debugger;
 					if(this._validators.hasOwnProperty(key) && !this._validators[key](value, data[key])){
-						$target.addClass("hasError");
+						this._options.errors.classHandler($target).addClass('hasError');
+						$target.data('pkvalidator.errors', this._messages[key][data[key]]);
 						this.showMessageError($target, key, data[key]);
 						break;
 					}
 				}
-				return errorFlag;
+				return this;
 			}
 			, onSubmit: function (e) {
-				
-				e.preventDefault();
+
 				this.validate();
+				var arrInput = this._options.inputs.split(',');
+				// return false;
+				for (var input in arrInput) {
+					input = input.trim();
+					if (this.isIncomplete(input) || this.hasErrors(input)) {
+						console.log('11111111111');
+						e.preventDefault();
+					}
+				}
+				return false;
+
 			}
 			, showMessageError: function (target, key, value) {
 				
 				var wrap = this._options.errors.classHandler(target);
 				var message = ('object' === typeof this._messages[key]) ? this._messages[key][value] : this._messages[key];
 				var errorsWrapper = wrap.find($(this._options.errors.errorsWrapper));// $($(this._options.errors.errorsWrapper), wrap);
-				var errorElem = $(this._options.errors.errorElem).addClass(this._options.errorClass);
+				var errorElem = $(this._options.errors.errorElem);
 				var message = this.formatMesssage(message, value, this);
-
+				
 				target.removeClass(this._options.successClass);
 				if (!!target.attr('data-error-'+key)) {
 					var customError = target.attr('data-error-'+key);
@@ -194,16 +223,13 @@
 					wrap.append(this._options.errors.errorsWrapper);
 					errorsWrapper = $($(this._options.errors.errorsWrapper), wrap);
 				}
+				errorElem.addClass(this._options.errorClass);
 				errorsWrapper.append(errorElem);
 				wrap.append(errorsWrapper);
-				
 			}
 			, removeMessageError: function (target) {
 				var wrap = this._options.errors.classHandler(target);
-				wrap.find($(this._options.errors.errorsWrapper)).each(function () {
-					$(this).remove();
-				});
-				$('.error', wrap).remove();
+				wrap.find('.'+this._options.errorClass+':first').parent().remove();
 			}
 			, showSuccessField: function (target) {
 				target.removeClass(this._options.errorClass);
@@ -264,15 +290,31 @@
 				return;
 			}
 		}
-		, isComplete: function () {
+		, isIncomplete: function (inputs) {
 			function fieldIncomplete() {
 	      return this.type === 'checkbox' ? !this.checked                                   :
 	             this.type === 'radio'    ? !$('[name="' + this.name + '"]:checked').length :
 	                                        $.trim(this.value) === ''
 	    }
-
-	    return !!this.$element.find(this._input_selectors).filter('[required]').filter(fieldIncomplete).length
+	    return !!this.$element.find(inputs).filter('[data-required]').filter(fieldIncomplete).length
 		}
+		, hasErrors: function (inputs) {
+    function fieldErrors() {
+      return !!($(this).data('pkvalidator.errors') || []).length
+    }
+
+    return !!this.$element.find(inputs).filter(fieldErrors).length
+  }
+		/**
+    * Destroy parsley field instance
+    *
+    * @private
+    * @method destroy
+    */
+    , destroy: function () {
+      this.$element.removeClass( 'pkvalidator-validated' );
+      this.reset().$element.off( '.' + this.type ).removeData( this.type );
+    }
 });
 
 		// A really lightweight plugin wrapper around the constructor,

@@ -9,8 +9,11 @@
 		.form-inline .form-control {
 		    width: 100%;
 		}
-		input.hasError {
+		.hasError input{
 			border-color: red;
+		}
+		.hasError .radio, .hasError .checkbox {
+			color: red;
 		}
 		ul.help-inline {
 			list-style: none;
@@ -23,7 +26,7 @@
 </head>
 <body>
 	<div class="container">
-	<div class="col-xs-8 col-xs-offset-2 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+	<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
 		<div class="page-header martop10"><h2>Register</h2></div>
 		<form role="form" method="POST" id="frm-register">
 			<div class="form-group">
@@ -70,7 +73,7 @@
 			<div class="form-group">
 				<label for="inputPhone" class="control-label">Phone</label>
 				<input type="text" class="form-control" id="inputPhone" placeholder="Phone" 
-				data-required="true"
+				
 				data-error-required="{0} Please type a valid phone number"
 				data-type="phone">
 			</div>
@@ -87,7 +90,7 @@
 				<div class="form-group col-sm-6">
 					<input type="password" class="form-control" id="inputPasswordConfirm" placeholder="Confirm"
 					data-match="#inputPassword" 
-					data-match-error="Whoops, these don't match"
+					data-error-match="Whoops, these don't match"
 					data-required="true">
 				</div>
 				</div>
@@ -101,7 +104,7 @@
 			</div>
 			<div class="radio">
 				<label>
-					<input type="radio" name="underwear" data-required="true">
+					<input type="radio" name="underwear">
 					Briefs
 				</label>
 			</div>
@@ -109,7 +112,7 @@
 		<div class="form-group">
 			<div class="checkbox">
 				<label>
-					<input type="checkbox" id="terms" data-error="Before you wreck yourself" data-required="true">
+					<input type="checkbox" id="terms" data-error-required="Before you wreck yourself" data-required="true">
 					Check yourself
 				</label>
 				<div class="help-block with-errors"></div>
@@ -123,7 +126,7 @@
 </div>
 <script>
 	$(function() {
-		$("#frm-register").pkvalidate({
+		$("#frm-register").pkvalidator({
 			successClass: 'success',
 			errorClass  : 'error',
 			errors      : {
