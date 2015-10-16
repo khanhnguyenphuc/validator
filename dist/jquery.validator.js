@@ -295,17 +295,8 @@
 				return;
 			}
 		}
-		/**
-    * Destroy parsley field instance
-    *
-    * @private
-    * @method destroy
-    */
-    // , destroy: function () {
-    //   this.$element.removeClass( 'pkvalidator-validated' );
-    //   this.reset().$element.off( '.' + this.type ).removeData( this.type );
-    // }
 });
+
 
 		// A really lightweight plugin wrapper around the constructor,
 		// preventing against multiple instantiations

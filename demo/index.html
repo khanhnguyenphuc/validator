@@ -3,7 +3,7 @@
 <head>
 	<title>jQuery validator</title>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-	<script src="../src/jquery.validator.js"></script>
+	<script src="../dist/jquery.validator.js"></script>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 	<style type="text/css">
 		.form-inline .form-control {
@@ -28,7 +28,7 @@
 	<div class="container">
 	<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
 		<div class="page-header martop10"><h2>Register</h2></div>
-		<form role="form" method="POST" id="frm-register" data-validate="pkvalidator">
+		<form role="form" method="POST" id="frm-register" ><!--data-validate="pkvalidator" -->
 			<div class="form-group">
 				<label for="inputName" class="control-label">Name</label>
 				<input type="text" class="form-control" id="inputName" placeholder="Cina Saffary" data-required="true"
@@ -44,24 +44,10 @@
 				data-error-required="please choose Age"
 				>
 				<option value="">---</option>
-				<option value="1">1</option>
-				<option value="2">1</option>
-				<option value="3">2</option>
+				<option value="1990">1990</option>
+				<option value="1991">1991</option>
+				<option value="1992">1992</option>
 				</select>
-			</div>
-			<div class="form-group has-feedback">
-				<label for="inputTwitter" class="control-label">Twitter</label>
-				<div class="input-group">
-					<span class="input-group-addon">@</span>
-					<input type="text" class="form-control" id="inputTwitter" placeholder="1000hz"
-					
-					data-required="true"
-					data-maxlength="15"
-					data-minlength="3"
-					data-error-minlength="It should have %s characters or more"
-					>
-				</div>
-				<span class="glyphicon form-control-feedback" aria-hidden="true"></span>
 			</div>
 			<div class="form-group">
 				<label for="inputEmail" class="control-label">Email</label>
@@ -137,6 +123,7 @@
 		// 		errorElem    : '<li></li>'
 		// 	}
 		// });
+	$("#frm-register").pkvalidator();
 	});
 </script>
 </body>
