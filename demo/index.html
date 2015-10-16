@@ -28,13 +28,13 @@
 	<div class="container">
 	<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
 		<div class="page-header martop10"><h2>Register</h2></div>
-		<form role="form" method="POST" id="frm-register">
+		<form role="form" method="POST" id="frm-register" data-validate="pkvalidator">
 			<div class="form-group">
 				<label for="inputName" class="control-label">Name</label>
 				<input type="text" class="form-control" id="inputName" placeholder="Cina Saffary" data-required="true"
 				data-maxlength="50"
 				data-minlength="3"
-				data-error-required="{0} Please type a valid phone number"
+				data-error-required="It should have a valid name"
 				data-error-minlength="It should have %s characters or more"
 				>
 			</div>
@@ -126,17 +126,17 @@
 </div>
 <script>
 	$(function() {
-		$("#frm-register").pkvalidator({
-			successClass: 'success',
-			errorClass  : 'error',
-			errors      : {
-				classHandler : function (el) {
-					return $(el).closest('.form-group');
-				},
-				errorsWrapper: '<ul class=\"help-inline\"></ul>',
-				errorElem    : '<li></li>'
-			}
-		});
+		// $("#frm-register").pkvalidator({
+		// 	successClass: 'success',
+		// 	errorClass  : 'error',
+		// 	errors      : {
+		// 		classHandler : function (el) {
+		// 			return $(el).closest('.form-group');
+		// 		},
+		// 		errorsWrapper: '<ul class=\"help-inline\"></ul>',
+		// 		errorElem    : '<li></li>'
+		// 	}
+		// });
 	});
 </script>
 </body>

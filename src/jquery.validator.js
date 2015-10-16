@@ -37,7 +37,7 @@
 	    , showErrors: true                          // Set to false if you don't want pkvalidate to display error messages
 	    , messages: {}
 	    , errors: {
-	        classHandler: function ( elem, isRadioOrCheckbox ) {}             // specify where pkvalidate error-success classes are set
+	        classHandler: function ( elem, isRadioOrCheckbox ) {return $(elem).closest('.form-group');}             // specify where pkvalidate error-success classes are set
 	      , container: function ( elem, isRadioOrCheckbox ) {}                // specify an elem where errors will be **apened**
 	      , errorsWrapper: '<div class="form-group has-error"></div>'                                        // do not set an id for this elem, it would have an auto-generated id
 	      , errorElem: '<p class="help-block has-error"></p>'                                            // each field constraint fail in an li
@@ -203,7 +203,10 @@
 					e.preventDefault;
 					return false;
 				}
-				else e.submit();
+				else {
+					alert('submit success');
+					e.submit();
+				}
 
 			}
 			, showMessageError: function (target, key, value) {
@@ -309,13 +312,14 @@
 		$.fn[ pluginName ] = function ( options ) {
 			return this.each(function() {
 				if ( !$.data( this, dataKey ) ) {
+					if (!options) options = {};
 					$.data( this, dataKey, new Plugin( this, options ) );
 				}
 			});
 		};
 		$( window ).on( 'load', function () {
-			$( '[data-validate="pkvalidate"]' ).each( function () {
-				$( this ).pkvalidate();
+			$( '[data-validate="pkvalidator"]' ).each( function () {
+				$( this ).pkvalidator();
 			} );
 		} );
 
