@@ -88,7 +88,7 @@
 
         	return false;
         }
-
+        if ('boolean' === typeof val) return val;
         return this.notnull( val ) && this.notblank( val );
       }
       , type: function ( val, type ) {
@@ -110,7 +110,6 @@
       		default:
       			return false;
       	}
-
         // test regExp if not null
         return '' !== val ? regExp.test( val ) : false;
       }
@@ -132,6 +131,7 @@
 			this._name = pluginName;
 			this._validators = validators;
 			this._messages = messages;
+			this.hasError = false;
 			this.init(options);
 		}
 
@@ -176,14 +176,17 @@
 				}
 				if ($target.is('[type="checkbox"]')) value = $target.prop('checked');
 
+				// reset
 				this.removeMessageError($target);
 				this._options.errors.classHandler($target).removeClass("hasError");
+				this.hasError = false;
 
 				for (var key in data) {
 					// debugger;
 					if(this._validators.hasOwnProperty(key) && !this._validators[key](value, data[key])){
 						this._options.errors.classHandler($target).addClass('hasError');
-						$target.data('pkvalidator.errors', this._messages[key][data[key]]);
+						// debugger
+						this.hasError = true;
 						this.showMessageError($target, key, data[key]);
 						break;
 					}
@@ -194,15 +197,13 @@
 
 				this.validate();
 				var arrInput = this._options.inputs.split(',');
-				// return false;
-				for (var input in arrInput) {
-					input = input.trim();
-					if (this.isIncomplete(input) || this.hasErrors(input)) {
-						console.log('11111111111');
-						e.preventDefault();
-					}
+				var self = this;
+				console.log("form has errors : " + this.hasError);
+				if (this.hasError) {
+					e.preventDefault;
+					return false;
 				}
-				return false;
+				else e.submit();
 
 			}
 			, showMessageError: function (target, key, value) {
@@ -229,6 +230,7 @@
 			}
 			, removeMessageError: function (target) {
 				var wrap = this._options.errors.classHandler(target);
+				wrap.removeClass('hasError');
 				wrap.find('.'+this._options.errorClass+':first').parent().remove();
 			}
 			, showSuccessField: function (target) {
@@ -290,31 +292,16 @@
 				return;
 			}
 		}
-		, isIncomplete: function (inputs) {
-			function fieldIncomplete() {
-	      return this.type === 'checkbox' ? !this.checked                                   :
-	             this.type === 'radio'    ? !$('[name="' + this.name + '"]:checked').length :
-	                                        $.trim(this.value) === ''
-	    }
-	    return !!this.$element.find(inputs).filter('[data-required]').filter(fieldIncomplete).length
-		}
-		, hasErrors: function (inputs) {
-    function fieldErrors() {
-      return !!($(this).data('pkvalidator.errors') || []).length
-    }
-
-    return !!this.$element.find(inputs).filter(fieldErrors).length
-  }
 		/**
     * Destroy parsley field instance
     *
     * @private
     * @method destroy
     */
-    , destroy: function () {
-      this.$element.removeClass( 'pkvalidator-validated' );
-      this.reset().$element.off( '.' + this.type ).removeData( this.type );
-    }
+    // , destroy: function () {
+    //   this.$element.removeClass( 'pkvalidator-validated' );
+    //   this.reset().$element.off( '.' + this.type ).removeData( this.type );
+    // }
 });
 
 		// A really lightweight plugin wrapper around the constructor,
