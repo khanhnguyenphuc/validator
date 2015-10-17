@@ -35,9 +35,13 @@
 	      , errorsWrapper: '<div class="form-group has-error"></div>'                                        // do not set an id for this elem, it would have an auto-generated id
 	      , errorElem: '<p class="help-block has-error"></p>'                                            // each field constraint fail in an li
       }                           // Add your own error messages here
-    },
+    };
 
-    /*Create abstract class*/
+    /*Create abstract class
+    *
+		*@class: Validator
+		*@constructor
+		*/
     var Validator = function(options) {
 
     	/*List messages error
@@ -125,7 +129,6 @@
 	    };
 	    this.init(options);
 		};
-  };
   $.extend(Validator.prototype, {
   	constructor: Validator,
   	/* Add custom validators and messages*/
@@ -145,7 +148,7 @@
   	/**
     * Replace %s placeholders by values
     *
-    * @method formatMesssage
+    * @method Validator.formatMesssage
     * @param {String} message Message key
     * @param {Mixed} args Args passed by validators functions. Could be string, number or object
     * @return {String} Formatted string
@@ -153,7 +156,7 @@
     , formatMesssage: function ( message, args ) {
     	if ( 'object' === typeof args ) {
     		for ( var i in args ) {
-    			message = this.formatMesssage( message, args[ i ] );
+    			message = this.Validator.formatMesssage( message, args[ i ] );
     		}
 
     		return message;
@@ -195,6 +198,7 @@
 
 					return;
 				}
+			}
   });
 		
 	/*
@@ -203,7 +207,92 @@
 	*@class: PkvalidatorField
 	*@constructor
 	*/
+	var PkvalidatorField = function(element, options) {
+		this.$element = $(element);
+		this.Validator = new Validator(options);
+		this._options = options;
+		this._type = 'PkvalidatorField';
+		this.lstError = [];
+		this.hasError = false;
+		this.addConstraints();
+		this.init(options);
+	};
 
+	$.extend(PkvalidatorField.prototype, {
+		constructor: PkvalidatorField,
+		init: function(options) {
+			var listener = 'input.' + this._type + ' change.' + this._type + ' focusout.' + this._type;
+			this.$element.on(listener, $.proxy(this.validateFields, this));
+		}
+		, validateFields: function() {
+			var value = this.$element.val();
+
+			// Do not show error with element unrequired
+			if (!this.$element.data('required') && !this.Validator.validators['required'](value)) {
+				this._options.errors.classHandler(this.$element).removeClass('hasError');
+				this.removeMessageError(this.$element);
+				return false
+			}
+
+			// if (this.$element.is('[type="radio"]')) {
+
+			// 	this.$element = this.$element.find('input[name="' + $element.attr('name') + '"]');
+			// 	value = false;
+			// 	data = $target.first().data();
+			// 	$element.each(function() {
+			// 		if ($(this).prop('checked')) value = true;
+			// 	});
+			// }
+
+			// if ($element.is('[type="checkbox"]')) value = $element.prop('checked');
+
+			for (var key in this.$element.data()) {
+				if(this.Validator.validators.hasOwnProperty(key) && !this.Validator.validators[key](value, this._options[key])){
+					this._options.errors.classHandler(this.$element).addClass('hasError');
+					this.hasError = true;
+					this.showMessageError(this.$element, key, this._options[key]);
+					break;
+				}
+			}
+			return this.hasError;
+		}
+		, addConstraints: function() {
+
+		}
+		, manageErrors: function() {}
+		, showMessageError: function (target, key, value) {
+			
+			var wrap = this._options.errors.classHandler(target);
+			var message = ('object' === typeof this.Validator.messages[key]) ? this.Validator.messages[key][value] : this.Validator.messages[key];
+			var errorsWrapper = wrap.find($(this._options.errors.errorsWrapper));// $($(this._options.errors.errorsWrapper), wrap);
+			var errorElem = $(this._options.errors.errorElem);
+			var message = this.Validator.formatMesssage(message, value, this);
+			
+			target.removeClass(this._options.successClass);
+			if (!!target.attr('data-error-'+key)) {
+				var customError = target.attr('data-error-'+key);
+				message = this.Validator.formatMesssage(customError, value, this);
+			}
+			errorElem.text(message);
+			if (!errorsWrapper.length) {
+				wrap.append(this._options.errors.errorsWrapper);
+				errorsWrapper = $($(this._options.errors.errorsWrapper), wrap);
+			}
+			errorElem.addClass(this._options.errorClass);
+			errorsWrapper.append(errorElem);
+			wrap.append(errorsWrapper);
+		}
+		, removeMessageError: function (target) {
+			var wrap = this._options.errors.classHandler(target);
+			wrap.removeClass('hasError');
+			wrap.find('.'+this._options.errorClass+':first').parent().remove();
+		}
+		, showSuccessField: function (target) {
+			target.removeClass(this._options.errorClass);
+			target.addClass(this._options.successClass);
+		}
+
+	});
 	/*
 	* Create PkvalidatorForm
 	*
@@ -212,98 +301,70 @@
 	*/
   var PkvalidatorForm = function(element, options) {
   	this.$element = $(element);
-  	this.$items = []; // list inputs inside form
+  	this.items = []; // list inputs inside form
   	this.Validator = new Validator(options);
+  	this._options = options;
   	this.init(options);
   };
 
 	// Avoid Plugin.prototype conflicts
 	$.extend(PkvalidatorForm.prototype, {
 		init: function (options) {
-			this.$element.on('input.PkvalidatorForm change.PkvalidatorForm focusout.PkvalidatorForm', $.proxy(this.validateFields, this));
+			var self = this;
+			this.$element.find( options.inputs ).each( function () {
+        self.addItem( this );
+      });
 			this.$element.on('submit.PkvalidatorForm', $.proxy(this.onSubmit, this));
 		},
 		validate: function () {
-			// debugger
-			this.$element.find( this._options.inputs ).each( function () {
-				self.addItem( this );
+			
+			this.items.forEach(function(item) {
+				item.validateFields();
 			});
 		}
 		, addItem: function ( elem ) {
 			if ( $( elem ).is( this._options.excluded ) ) {
 				return false;
 			}
-			$(elem).trigger('input.PkvalidatorForm');
+			var validatorField = new PkvalidatorField( elem, this._options )
+			// var PkvalidatorField = $(elem).pkvalidator(this._options );
+
+      this.items.push( validatorField );
+      // this.items.push( PkvalidatorField );
     }
-    , validateFields: function (e) {
-			// var data = this.data();
-			var eType = e.type;
-			var errorFlag = false;
-			var $target = $(e.target);
-			var data = $target.data();
-			var value = $target.val();
-			// Do not show error with element unrequired
-			if (!$target.data('required') && !this.Validator.validators['required'](value)) {
-				this._options.errors.classHandler($target).removeClass('hasError');
-				this.removeMessageError($target);
-				return false
-			};
-			if ($target.is('[type="radio"]')) {
-
-				$target = this.$element.find('input[name="' + $target.attr('name') + '"]');
-				value = false;
-				data = $target.first().data();
-				$target.each(function() {
-					if ($(this).prop('checked')) value = true;
-				});
-			}
-			if ($target.is('[type="checkbox"]')) value = $target.prop('checked');
-
-			// reset
-			this.removeMessageError($target);
-			this._options.errors.classHandler($target).removeClass("hasError");
-			this.hasError = false;
-
-			for (var key in data) {
-				// debugger;
-				if(this.Validator.validators.hasOwnProperty(key) && !this.Validator.validators[key](value, data[key])){
-					this._options.errors.classHandler($target).addClass('hasError');
-					// debugger
-					this.hasError = true;
-					this.showMessageError($target, key, data[key]);
-					break;
-				}
-			}
-			return this;
-		}
 		, onSubmit: function (e) {
 
+			e.preventDefault();
 			this.validate();
-			var arrInput = this._options.inputs.split(',');
-			var self = this;
-			console.log("form has errors : " + this.hasError);
-			if (this.hasError) {
-				e.preventDefault;
-				return false;
-			}
-			else {
-				alert('submit success');
-				e.submit();
-			}
+			return false;
+			// this.items.forEach(function(x) {
+			// 	if (x.hasError) {
+			// 		e.preventDefault();
+			// 		return false;
+			// 	}
+			// });
+			// if (this.hasError) {
+			// 	e.preventDefault;
+			// 	return false;
+			// }
+			// else {
+			// 	alert('submit success');
+			// 	e.submit();
+			// }
 
 		}
 		, showMessageError: function (target, key, value) {
 			
 			var wrap = this._options.errors.classHandler(target);
-			var message = ('object' === typeof this.Validator._messages[key]) ? this.Validator._messages[key][value] : this.Validator._messages[key];
+			var message = ('object' === typeof this.Validator.messages[key]) ? this.Validator.messages[key][value] : this.Validator.messages[key];
 			var errorsWrapper = wrap.find($(this._options.errors.errorsWrapper));// $($(this._options.errors.errorsWrapper), wrap);
 			var errorElem = $(this._options.errors.errorElem);
-			var message = this.formatMesssage(message, value, this);
+			var message = this.Validator.formatMesssage(message, value, this);
 			
 			target.removeClass(this._options.successClass);
 			if (!!target.attr('data-error-'+key)) {
 				var customError = target.attr('data-error-'+key);
-				message = this.formatMesssage(customError, value, this);
+				message = this.Validator.formatMesssage(customError, value, this);
 			}
 			errorElem.text(message);
 			if (!errorsWrapper.length) {
@@ -331,7 +392,7 @@
 		// A really lightweight plugin wrapper around the constructor,
 		// preventing against multiple instantiations
 		$.fn[ pluginName ] = function ( options ) {
-			$.extend({}, defaults, 'undefined' !== typeof options ? options : {}, this.data() )
+			options = $.extend({}, defaults, 'undefined' !== typeof options ? options : {}, this.data() )
 			return this.each(function() {
 				if ( !$.data( this, dataKey ) ) {
 					if ($( this ).is( 'form' )){
