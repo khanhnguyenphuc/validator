@@ -226,14 +226,17 @@
 		}
 		, validateFields: function() {
 			var value = this.$element.val();
-
+			var data = this.$element.data();
 			// Do not show error with element unrequired
 			if (!this.$element.data('required') && !this.Validator.validators['required'](value)) {
 				this._options.errors.classHandler(this.$element).removeClass('hasError');
 				this.removeMessageError(this.$element);
 				return false
 			}
-
+			// reset
+			this.removeMessageError(this.$element);
+			this._options.errors.classHandler(this.$element).removeClass("hasError");
+			this.hasError = false;
 			// if (this.$element.is('[type="radio"]')) {
 
 			// 	this.$element = this.$element.find('input[name="' + $element.attr('name') + '"]');
@@ -246,18 +249,24 @@
 
 			// if ($element.is('[type="checkbox"]')) value = $element.prop('checked');
 
-			for (var key in this.$element.data()) {
-				if(this.Validator.validators.hasOwnProperty(key) && !this.Validator.validators[key](value, this._options[key])){
+			for (var key in data) {
+				if(this.Validator.validators.hasOwnProperty(key) && !this.Validator.validators[key](value, data[key])){
 					this._options.errors.classHandler(this.$element).addClass('hasError');
 					this.hasError = true;
-					this.showMessageError(this.$element, key, this._options[key]);
+					this.showMessageError(this.$element, key, data[key]);
 					break;
 				}
 			}
 			return this.hasError;
 		}
 		, addConstraints: function() {
-
+			for (var key in this._options.constraints) {
+				var value = this._options.constraints[key];
+				// if ('object' === typeof value) {
+				// 	this.addConstraint(key, value[key])
+				// }
+				this.$element.data(key, value);
+			}
 		}
 		, manageErrors: function() {}
 		, showMessageError: function (target, key, value) {

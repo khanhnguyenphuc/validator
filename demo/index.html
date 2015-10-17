@@ -39,8 +39,12 @@
 				>
 			</div>
 			<div class="form-group">
+				<label for="inputDesc" class="control-label">Desc</label>
+				<textarea class="form-control" id="inputDesc" placeholder="Desc"></textarea>
+			</div>
+			<div class="form-group">
 				<label for="selAge" class="control-label">Age</label>
-				<select class="form-control" id="inputName" placeholder="Cina Saffary" data-required="true"
+				<select class="form-control" id="selAge" placeholder="Cina Saffary" data-required="true"
 				data-error-required="please choose Age"
 				>
 				<option value="">---</option>
@@ -123,6 +127,11 @@
 		// 		errorElem    : '<li></li>'
 		// 	}
 		// });
+	// $('#inputDesc').pkvalidator({
+	// 	constraints: {
+	// 		required: true
+	// 	}
+	// });
 	$("#frm-register").pkvalidator();
 	});
 </script>
