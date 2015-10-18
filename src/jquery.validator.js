@@ -207,9 +207,11 @@
 	*@class: PkvalidatorField
 	*@constructor
 	*/
-	var PkvalidatorField = function(element, options) {
+	var PkvalidatorField = function(element, options, type) {
 		this.$element = $(element);
 		this.Validator = new Validator(options);
+
+		if (type === 'PkvalidatorMultiField') return this;
 		this._options = options;
 		this._type = 'PkvalidatorField';
 		this.lstError = [];
@@ -237,15 +239,16 @@
 			this.removeMessageError(this.$element);
 			this._options.errors.classHandler(this.$element).removeClass("hasError");
 			this.hasError = false;
-			// if (this.$element.is('[type="radio"]')) {
 
-			// 	this.$element = this.$element.find('input[name="' + $element.attr('name') + '"]');
-			// 	value = false;
-			// 	data = $target.first().data();
-			// 	$element.each(function() {
-			// 		if ($(this).prop('checked')) value = true;
-			// 	});
-			// }
+			if (this.$element.is('[type="radio"]') || this.$element.is('[type="checkbox"]')) {
+
+				this.$element = $('input[name="' + this.$element.attr('name') + '"]');
+				value = false;
+				data = this.$element.first().data();
+				this.$element.each(function() {
+					if ($(this).prop('checked')) value = true;
+				});
+			}
 
 			// if ($element.is('[type="checkbox"]')) value = $element.prop('checked');
 
@@ -303,6 +306,39 @@
 
 	});
 	/*
+	* Create PkvalidatorMultiField for radio and checkbox
+	*
+	*@class: PkvalidatorForm
+	*@constructor
+	*/
+	var PkvalidatorMultiField = function(element, options) {
+		this.$element = $(element);
+  	this.items = {};
+  	this.Validator = new Validator(options);
+  	this._options = options;
+  	this.inherit(element, options);
+  	this.init(options);
+  	this._type = 'PkvalidatorMultiField';
+	};
+	$.extend(PkvalidatorMultiField.prototype, {
+		init: function(options) {
+			
+	  	this.group = options.group || false;
+	  	this.siblings = this.group ? $('input[type=' + this.group + ']') : $('input[type=' + this.$element.name + ']');
+	  	this.isRadio = false;
+	  	this.isCheckbox = false;
+	  	this.siblings.on('change.' + this._type, $.proxy(this.validateFields, this));
+		}
+		, inherit: function(elem, options) {
+			var clone = new PkvalidatorField(elem, options, this._type);
+			for (var property in clone) {
+				if ('undefined' === typeof this[property])
+					this[property] = clone[property];
+			}
+		}
+	});
+
+	/*
 	* Create PkvalidatorForm
 	*
 	*@class: PkvalidatorForm
@@ -335,8 +371,12 @@
 			if ( $( elem ).is( this._options.excluded ) ) {
 				return false;
 			}
-			var validatorField = new PkvalidatorField( elem, this._options )
-			// var PkvalidatorField = $(elem).pkvalidator(this._options );
+			// var validatorField;
+			// if ($(elem).is('radio') || $(elem).is('checkbox')) 
+			// 	validateField = new PkvalidatorMultiField(elem, this._options);
+			// else
+			// 	validatorField = new PkvalidatorField( elem, this._options );
+			var validatorField = $(elem).pkvalidator(this._options );
 
       this.items.push( validatorField );
       // this.items.push( PkvalidatorField );
@@ -401,17 +441,40 @@
 		// A really lightweight plugin wrapper around the constructor,
 		// preventing against multiple instantiations
 		$.fn[ pluginName ] = function ( options ) {
+			// debugger
 			options = $.extend({}, defaults, 'undefined' !== typeof options ? options : {}, this.data() )
-			return this.each(function() {
-				if ( !$.data( this, dataKey ) ) {
-					if ($( this ).is( 'form' )){
-						$.data( this, dataKey, new PkvalidatorForm( this, options ) );
+			var plugin = this.data(dataKey);
+
+      // has plugin instantiated ?
+      if (plugin instanceof Plugin) {
+      		// here is our parsley public function accessor
+      		if ( 'string' === typeof option && 'function' === typeof plugin[ option ] ) {
+		        var response = plugin[ option ]( fn );
+
+		        return 'undefined' !== typeof response ? response : $( self );
+		      }
+          // if have options arguments, call plugin.init() again
+          if (typeof options !== 'undefined') {
+              plugin.init(options);
+          }
+      } else {
+          if (this.is( 'form' )){
+          	plugin = new PkvalidatorForm( this, options );
+						$.data( this, dataKey, plugin );
 					}
-					else{
-						$.data( this, dataKey, new PkvalidatorField( this, options ) );
+					else if (!this.is(options.excluded)){
+						if (!this.is('input[type=radio]') && !this.is('input[type=radio]')) {
+							plugin = new PkvalidatorField( this, options );
+							$.data( this, dataKey, plugin );
+						}
+						else {
+							plugin = new PkvalidatorMultiField( this, options );
+							$.data( this, dataKey, plugin );
+						}
 					}
-				}
-			});
+      }
+
+      return plugin;
 		};
 		$( window ).on( 'load', function () {
 			$( '[data-validate="pkvalidator"]' ).each( function () {
