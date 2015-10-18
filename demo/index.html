@@ -3,7 +3,7 @@
 <head>
 	<title>jQuery validator</title>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-	<script src="../src/jquery.validator.js"></script>
+	<script src="../dist/jquery.validator.min.js"></script>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 	<style type="text/css">
 		.form-inline .form-control {
@@ -88,14 +88,14 @@
 		<div class="form-group">
 			<div class="radio">
 				<label>
-					<input type="radio" name="underwear" data-required="true">
-					Boxers
+					<input type="radio" name="gender" data-required="true">
+					Male
 				</label>
 			</div>
 			<div class="radio">
 				<label>
-					<input type="radio" name="underwear">
-					Briefs
+					<input type="radio" name="gender">
+					Female
 				</label>
 			</div>
 		</div>
@@ -109,13 +109,16 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<button type="button" id="btnSubmit" class="btn btn-primary">Submit</button>
+			<button type="submit" id="btnSubmit" class="btn btn-primary">Submit</button>
 		</div>
 		<div class="form-group">
 			<button type="button" id="destroy" class="btn btn-danger">Destroy validator</button>
 		</div>
 		<div class="form-group">
 			<button type="button" id="reInitValidtor" class="btn btn-success">Reinit validator</button>
+		</div>
+		<div class="form-group">
+			<button type="button" id="customChkValidate" class="btn btn-primary">Custom check validate for input desc</button>
 		</div>
 	</form>
 </div>
@@ -133,30 +136,39 @@
 		// 		errorElem    : '<li></li>'
 		// 	}
 		// });
-	// $('#inputDesc').pkvalidator({
-	// 	constraints: {
-	// 		required: true
-	// 	}
-	// });
-	$("#frm-register").pkvalidator();
-	$('#btnSubmit').on('click', function(e) {
-		e.preventDefault();
-		console.log($("#frm-register").data());
-		// debugger;
-		if ($("#frm-register").pkvalidator('validate')) {
-			console.log(1111111);
-			return false;
-		} else {
-			console.log(22222222);
-			return false;
+	$('#inputDesc').pkvalidator({
+		constraints: {
+			required: true,
+			type: "email"
+		},
+		messages: {
+			type: {
+				email: "email is invalid"
+			}
 		}
 	});
+	$("#frm-register").pkvalidator();
+	// $('#btnSubmit').on('click', function(e) {
+	// 	e.preventDefault();
+	// 	console.log($("#frm-register").data());
+	// 	// debugger;
+	// 	if ($("#frm-register").pkvalidator('validate')) {
+	// 		console.log(1111111);
+	// 		return false;
+	// 	} else {
+	// 		console.log(22222222);
+	// 		return false;
+	// 	}
+	// });
 	$('#destroy').click(function(e) {
 		$("#frm-register").pkvalidator('destroy');
 	});
 	$('#reInitValidtor').click(function(e) {
 		$("#frm-register").pkvalidator();
 	});
+	$('#customChkValidate').click(function(e) {
+		$('#inputDesc').pkvalidator('validate');
+	})
 	});
 	
 </script>
