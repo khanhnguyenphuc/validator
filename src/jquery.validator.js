@@ -14,7 +14,7 @@
 
 		// Create the defaults once
 		var pluginName = "pkvalidator";
-		var dataKey = "plugin_" + pluginName;
+		var dataKey = pluginName;
 		var defaults = {
 			inputs: 'input, textarea, select'           // Default supported inputs.
 	    , excluded: 'input[type=hidden], input[type=file], :disabled' // Do not validate input[type=hidden] & :disabled.
@@ -224,9 +224,9 @@
 		constructor: PkvalidatorField,
 		init: function(options) {
 			var listener = 'input.' + this._type + ' change.' + this._type + ' focusout.' + this._type;
-			this.$element.on(listener, $.proxy(this.validateFields, this));
+			this.$element.on(listener, $.proxy(this.validate, this));
 		}
-		, validateFields: function() {
+		, validate: function() {
 			var value = this.$element.val();
 			var data = this.$element.data();
 			// Do not show error with element unrequired
@@ -249,8 +249,6 @@
 					if ($(this).prop('checked')) value = true;
 				});
 			}
-
-			// if ($element.is('[type="checkbox"]')) value = $element.prop('checked');
 
 			for (var key in data) {
 				if(this.Validator.validators.hasOwnProperty(key) && !this.Validator.validators[key](value, data[key])){
@@ -303,7 +301,10 @@
 			target.removeClass(this._options.errorClass);
 			target.addClass(this._options.successClass);
 		}
-
+		, destroy: function () {
+			this.$element.off('.' + this._type).removeData(dataKey);
+			this.removeMessageError(this.$element);
+		}
 	});
 	/*
 	* Create PkvalidatorMultiField for radio and checkbox
@@ -327,7 +328,7 @@
 	  	this.siblings = this.group ? $('input[type=' + this.group + ']') : $('input[type=' + this.$element.name + ']');
 	  	this.isRadio = false;
 	  	this.isCheckbox = false;
-	  	this.siblings.on('change.' + this._type, $.proxy(this.validateFields, this));
+	  	this.siblings.on('change.' + this._type, $.proxy(this.validate, this));
 		}
 		, inherit: function(elem, options) {
 			var clone = new PkvalidatorField(elem, options, this._type);
@@ -335,6 +336,20 @@
 				if ('undefined' === typeof this[property])
 					this[property] = clone[property];
 			}
+		}
+		, getVal: function() {
+			var values = [];
+			if (this.isRadio) {
+				var val = this.siblings.find('input:checked').val() || false;
+				values.push(val);
+			}
+
+			if (this.isCheckbox) {
+				this.siblings.find('input:checked').forEach(function(checkbox) {
+					values.push(this.val());
+				});
+			}
+			return values;
 		}
 	});
 
@@ -354,6 +369,7 @@
 
 	// Avoid Plugin.prototype conflicts
 	$.extend(PkvalidatorForm.prototype, {
+		constructor: PkvalidatorForm,
 		init: function (options) {
 			var self = this;
 			this.$element.find( options.inputs ).each( function () {
@@ -364,42 +380,32 @@
 		validate: function () {
 			
 			this.items.forEach(function(item) {
-				item.validateFields();
+				item.validate();
 			});
+			return !this.hasError();
+		}
+		, hasError: function () {
+			
+			for (var item in this.items) {
+				if (this.items[item].hasError) return true;
+			}
+			return false;
 		}
 		, addItem: function ( elem ) {
 			if ( $( elem ).is( this._options.excluded ) ) {
 				return false;
 			}
-			// var validatorField;
-			// if ($(elem).is('radio') || $(elem).is('checkbox')) 
-			// 	validateField = new PkvalidatorMultiField(elem, this._options);
-			// else
-			// 	validatorField = new PkvalidatorField( elem, this._options );
 			var validatorField = $(elem).pkvalidator(this._options );
 
       this.items.push( validatorField );
       // this.items.push( PkvalidatorField );
     }
 		, onSubmit: function (e) {
-
 			e.preventDefault();
-			this.validate();
-			return false;
-			// this.items.forEach(function(x) {
-			// 	if (x.hasError) {
-			// 		e.preventDefault();
-			// 		return false;
-			// 	}
-			// });
-			// if (this.hasError) {
-			// 	e.preventDefault;
-			// 	return false;
-			// }
-			// else {
-			// 	alert('submit success');
-			// 	e.submit();
-			// }
+			if(this.validate())
+				console('submit success')
+			else
+				console('submit fail')
 
 		}
 		, showMessageError: function (target, key, value) {
@@ -433,23 +439,26 @@
 			target.removeClass(this._options.errorClass);
 			target.addClass(this._options.successClass);
 		}
-		// , destroy: function () {
-		// 	this.$element.off('.' + this._type).removeData(this._type);
-		// }
+		, destroy: function () {
+			this.$element.off('.' + this._type).removeData(dataKey);
+			this.items.forEach(function(item) {
+				item.destroy();
+			});
+		}
 });
 
 		// A really lightweight plugin wrapper around the constructor,
 		// preventing against multiple instantiations
 		$.fn[ pluginName ] = function ( options ) {
 			// debugger
-			options = $.extend({}, defaults, 'undefined' !== typeof options ? options : {}, this.data() )
+			
 			var plugin = this.data(dataKey);
 
       // has plugin instantiated ?
-      if (plugin instanceof Plugin) {
-      		// here is our parsley public function accessor
-      		if ( 'string' === typeof option && 'function' === typeof plugin[ option ] ) {
-		        var response = plugin[ option ]( fn );
+      if (plugin) {
+      		// here is our pkvalidator public function accessor
+      		if ( 'string' === typeof options && 'function' === typeof plugin[ options ] ) {
+		        var response = plugin[ options ]();
 
 		        return 'undefined' !== typeof response ? response : $( self );
 		      }
@@ -458,20 +467,19 @@
               plugin.init(options);
           }
       } else {
+      	options = $.extend({}, defaults, 'undefined' !== typeof options ? options : {}, this.data() );
           if (this.is( 'form' )){
           	plugin = new PkvalidatorForm( this, options );
-						$.data( this, dataKey, plugin );
 					}
 					else if (!this.is(options.excluded)){
-						if (!this.is('input[type=radio]') && !this.is('input[type=radio]')) {
+						if (!this.is('input[type=radio], input[type=checkbox]')) {
 							plugin = new PkvalidatorField( this, options );
-							$.data( this, dataKey, plugin );
 						}
 						else {
 							plugin = new PkvalidatorMultiField( this, options );
-							$.data( this, dataKey, plugin );
 						}
 					}
+					this.data(dataKey, plugin );
       }
 
       return plugin;

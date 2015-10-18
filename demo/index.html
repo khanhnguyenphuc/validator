@@ -109,7 +109,13 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<button type="submit" class="btn btn-primary">Submit</button>
+			<button type="button" id="btnSubmit" class="btn btn-primary">Submit</button>
+		</div>
+		<div class="form-group">
+			<button type="button" id="destroy" class="btn btn-danger">Destroy validator</button>
+		</div>
+		<div class="form-group">
+			<button type="button" id="reInitValidtor" class="btn btn-success">Reinit validator</button>
 		</div>
 	</form>
 </div>
@@ -133,7 +139,26 @@
 	// 	}
 	// });
 	$("#frm-register").pkvalidator();
+	$('#btnSubmit').on('click', function(e) {
+		e.preventDefault();
+		console.log($("#frm-register").data());
+		// debugger;
+		if ($("#frm-register").pkvalidator('validate')) {
+			console.log(1111111);
+			return false;
+		} else {
+			console.log(22222222);
+			return false;
+		}
 	});
+	$('#destroy').click(function(e) {
+		$("#frm-register").pkvalidator('destroy');
+	});
+	$('#reInitValidtor').click(function(e) {
+		$("#frm-register").pkvalidator();
+	});
+	});
+	
 </script>
 </body>
 </html>
