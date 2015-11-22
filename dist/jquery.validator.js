@@ -342,8 +342,8 @@
 		constructor: PkvalidatorField,
 		init: function(options) {
 			this.events = 'input.' + this._type + ' change.' + this._type + ' focusout.' + this._type;
-			this.dataValid = this.$element.data();
-			this.$element.on(this.events, $.proxy(this.validate, this));
+			// this.dataValid = this.$element.data();
+			this.$element.off(this.events).on(this.events, $.proxy(this.validate, this));
 		}
 		, validate: function() {
 			var value = this.getVal();
@@ -414,10 +414,10 @@
       return this.$element.data('value') || this.$element.val();
     }
 		, getData: function () {
-      return this.$element.data(pluginName).dataValid;
+      return this.$element.data();
     }
 		, destroy: function () {
-			this.$element.off('.' + this._type, this.events).removeData(pluginName);
+			this.$element.off(this.events).removeData(this._type);
 			this.removeMessageError(this.$element);
 		}
 	});
@@ -471,7 +471,7 @@
       }
     }
 		, getData: function () {
-      return $(this.siblings).first().data(pluginName).dataValid;
+      return $(this.siblings).first().data();
     }
 
     , getName: function () {
@@ -511,7 +511,7 @@
         self.addItem( this );
       });
       this.events = 'submit.PkvalidatorForm';
-			this.$element.on(this.events, $.proxy(this.onSubmit, this));
+			this.$element.off(this.events).on(this.events, $.proxy(this.onSubmit, this));
 		},
 		validate: function () {
 			
@@ -575,7 +575,7 @@
 			target.addClass(this._options.successClass);
 		}
 		, destroy: function () {
-			this.$element.off('.' + this._type, this.events).removeData(pluginName);
+			this.$element.off(this.events).removeData(this._type);
 			this.items.forEach(function(item) {
 				item.destroy();
 			});
@@ -584,10 +584,16 @@
 
 		// A really lightweight plugin wrapper around the constructor,
 		// preventing against multiple instantiations
-		$.fn[ pluginName ] = function ( options ) {
-			
-			var plugin = this.data(pluginName);
+		$.fn[ pluginName ] = function ( options, fn) {
+			var $this = $(this);
+			var plugin, type;
+			if ($this.is('form')) {
+				type = 'PkvalidatorForm';
+			} else {
+				type = !$this.is( 'input[type=radio], input[type=checkbox]' ) ? 'PkvalidatorField' : 'parsleyFieldMultiple';
+			}
 
+			plugin = this.data(type);
       // has plugin instantiated ?
       if (plugin) {
       		// here is our pkvalidator public function accessor
@@ -613,11 +619,12 @@
 							plugin = new PkvalidatorMultiField( this, options );
 						}
 					}
-					this.data(pluginName, plugin );
+					this.data(plugin._type, plugin );
       }
 
-      return plugin;
+      return 'function' === typeof fn ? fn() : plugin;
 		};
+		$.fn[ pluginName ].defaults = defaults;
 		$(function() {
       $('[data-' + pluginName + ']')[pluginName]();
     });

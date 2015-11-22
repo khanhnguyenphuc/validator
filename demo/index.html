@@ -28,7 +28,7 @@
 	<div class="container">
 	<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
 		<div class="page-header martop10"><h2>Register</h2></div>
-		<form role="form" method="POST" id="frm-register" data-pkvalidator><!--data-pkvalidate="pkvalidator" -->
+		<form role="form" method="POST" id="frm-register"><!-- add attr data-pkvalidator into form-->
 			<div class="form-group">
 				<label for="inputName" class="control-label">Name</label>
 				<input type="text" class="form-control" id="inputName" placeholder="Cina Saffary" data-required="true"
@@ -62,10 +62,7 @@
 			</div>
 			<div class="form-group">
 				<label for="inputPhone" class="control-label">Phone</label>
-				<input type="text" class="form-control" id="inputPhone" placeholder="Phone" 
-				
-				data-error-required="{0} Please type a valid phone number"
-				data-type="phone">
+				<input type="text" class="form-control" id="inputPhone" placeholder="Phone">
 			</div>
 			<div class="form-group">
 				<label for="inputPassword" class="control-label">Password</label>
@@ -86,6 +83,8 @@
 				</div>
 			</div>
 		<div class="form-group">
+			<fieldset>
+			<legend>Sex</legend>
 			<div class="radio">
 				<label>
 					<input type="radio" name="gender" data-required="true">
@@ -98,6 +97,36 @@
 					Female
 				</label>
 			</div>
+			</fieldset>
+		</div>
+		<div class="form-group">
+			<fieldset>
+			<legend>Favorite</legend>
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="favorite" data-required="true" data-mincheck="3">
+					Listening music
+				</label>
+			</div>
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="favorite">
+					Playing game
+				</label>
+			</div>
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="favorite">
+					Reading book
+				</label>
+			</div>
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="favorite">
+					Running
+				</label>
+			</div>
+			</fieldset>
 		</div>
 		<div class="form-group">
 			<div class="checkbox">
@@ -118,7 +147,7 @@
 			<button type="button" id="reInitValidtor" class="btn btn-success">Reinit validator</button>
 		</div>
 		<div class="form-group">
-			<button type="button" id="customChkValidate" class="btn btn-primary">Custom check validate for input desc</button>
+			<button type="button" id="customChkValidate" class="btn btn-primary">Custom check validate for input phone</button>
 		</div>
 	</form>
 </div>
@@ -136,39 +165,27 @@
 		// 		errorElem    : '<li></li>'
 		// 	}
 		// });
-	$('#inputDesc').pkvalidator({
-		constraints: {
-			required: true,
-			type: "email"
-		},
-		messages: {
-			type: {
-				email: "email is invalid"
+		$('#inputPhone').pkvalidator({
+			constraints: {
+				required: true,
+				type: "phone"
+			},
+			messages: {
+				type: {
+					phone: "Phone number is invalid"
+				}
 			}
-		}
-	});
-	// $("#frm-register").pkvalidator();
-	// $('#btnSubmit').on('click', function(e) {
-	// 	e.preventDefault();
-	// 	console.log($("#frm-register").data());
-	// 	// debugger;
-	// 	if ($("#frm-register").pkvalidator('validate')) {
-	// 		console.log(1111111);
-	// 		return false;
-	// 	} else {
-	// 		console.log(22222222);
-	// 		return false;
-	// 	}
-	// });
-	$('#destroy').click(function(e) {
-		$("#frm-register").pkvalidator('destroy');
-	});
-	$('#reInitValidtor').click(function(e) {
-		$("#frm-register").pkvalidator();
-	});
-	$('#customChkValidate').click(function(e) {
-		$('#inputDesc').pkvalidator('validate');
-	})
+		});
+		$('#frm-register').pkvalidator();
+		$('#destroy').click(function(e) {
+			$("#frm-register").pkvalidator('destroy');
+		});
+		$('#reInitValidtor').click(function(e) {
+			$("#frm-register").pkvalidator();
+		});
+		$('#customChkValidate').click(function(e) {
+			$('#inputPhone').pkvalidator('validate');
+		});
 	});
 	
 </script>
