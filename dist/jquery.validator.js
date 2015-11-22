@@ -595,13 +595,18 @@
 
 			plugin = this.data(type);
       // has plugin instantiated ?
+      if ( 'string' === typeof options && plugin && 'function' === typeof plugin[ options ] ) {
+        var response = plugin[ options ]();
+
+        return 'undefined' !== typeof response ? response : $( self );
+      }
       if (plugin) {
       		// here is our pkvalidator public function accessor
-      		if ( 'string' === typeof options && 'function' === typeof plugin[ options ] ) {
-		        var response = plugin[ options ]();
+      		// if ( 'string' === typeof options && 'function' === typeof plugin[ options ] ) {
+		      //   var response = plugin[ options ]();
 
-		        return 'undefined' !== typeof response ? response : $( self );
-		      }
+		      //   return 'undefined' !== typeof response ? response : $this;
+		      // }
           // if have options arguments, call plugin.init() again
           if (typeof options !== 'undefined') {
               plugin.init(options);

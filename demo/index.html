@@ -5,6 +5,8 @@
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 	<script src="../dist/jquery.validator.js"></script>
 	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+	<link href="../src/jquery.validator.css" rel="stylesheet" type="text/css" />
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 	<style type="text/css">
 		.form-inline .form-control {
 		    width: 100%;
@@ -27,7 +29,21 @@
 <body>
 	<div class="container">
 	<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
-		<div class="page-header martop10"><h2>Register</h2></div>
+		<div class="page-header martop10">
+			<h2>Register</h2>
+			<div class="dropdown">
+			  <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Action Validate
+			  <span class="caret"></span></button>
+			  <ul class="dropdown-menu">
+			    <li><button type="button" id="btnSubmit" class="btn btn-primary">Submit</button></li>
+			    <li><button type="button" id="destroy" class="btn btn-danger">Destroy validator From</button></li>
+			    <li><button type="button" id="reInitValidtor" class="btn btn-success">Reinit validator From</button></li>
+			    <li><button type="button" id="customChkValidate" class="btn btn-primary">Custom check validate for input phone</button></li>
+			    <li><button type="button" id="customDesValidate" class="btn btn-danger">Custom destroy validate for input phone</button></li>
+			    <li><button type="button" id="customReInitValidate" class="btn btn-success">Re-init for input phone</button></li>
+			  </ul>
+			</div>
+		</div>
 		<form role="form" method="POST" id="frm-register"><!-- add attr data-pkvalidator into form-->
 			<div class="form-group">
 				<label for="inputName" class="control-label">Name</label>
@@ -138,16 +154,7 @@
 			</div>
 		</div>
 		<div class="form-group">
-			<button type="submit" id="btnSubmit" class="btn btn-primary">Submit</button>
-		</div>
-		<div class="form-group">
-			<button type="button" id="destroy" class="btn btn-danger">Destroy validator</button>
-		</div>
-		<div class="form-group">
-			<button type="button" id="reInitValidtor" class="btn btn-success">Reinit validator</button>
-		</div>
-		<div class="form-group">
-			<button type="button" id="customChkValidate" class="btn btn-primary">Custom check validate for input phone</button>
+			<button type="submit" class="btn btn-primary">Submit</button>
 		</div>
 	</form>
 </div>
@@ -177,6 +184,9 @@
 			}
 		});
 		$('#frm-register').pkvalidator();
+		$('#btnSubmit').click(function(e) {
+			$("#frm-register").pkvalidator('validate');
+		});
 		$('#destroy').click(function(e) {
 			$("#frm-register").pkvalidator('destroy');
 		});
@@ -185,6 +195,12 @@
 		});
 		$('#customChkValidate').click(function(e) {
 			$('#inputPhone').pkvalidator('validate');
+		});
+		$('#customDesValidate').click(function(e) {
+			$('#inputPhone').pkvalidator('destroy');
+		});
+		$('#customReInitValidate').click(function(e) {
+			$('#inputPhone').pkvalidator();
 		});
 	});
 	
